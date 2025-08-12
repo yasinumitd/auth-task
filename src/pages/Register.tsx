@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 
 function isValidEmail(email: string): boolean {
@@ -91,7 +92,7 @@ export default function Register() {
             onBlur={() => setTouched((t) => ({ ...t, confirm: true }))}
             placeholder="Şifrenizi tekrar girin"
             aria-invalid={!!confirmError}
-            style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #d1d5db' }}
+            style={{ padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: 8 }}
           />
           {confirmError && <span style={{ color: '#b91c1c', fontSize: 13 }}>{confirmError}</span>}
         </label>
@@ -107,6 +108,11 @@ export default function Register() {
         >
           {isSubmitting ? 'Kayıt Oluyor…' : 'Kayıt Ol'}
         </button>
+
+        <div style={{ marginTop: 8 }}>
+          <span>Zaten hesabın var mı? </span>
+          <Link to="/login">Girişe geç</Link>
+        </div>
       </form>
     </div>
   )

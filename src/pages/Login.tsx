@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 
 function isValidEmail(email: string): boolean {
@@ -11,6 +12,7 @@ export default function Login() {
   const [password, setPassword] = useState('')
 
   const { login, isSubmitting, error: authError, clearError } = useAuth()
+  const navigate = useNavigate()
 
   const [touched, setTouched] = useState({ email: false, password: false })
 
@@ -28,6 +30,7 @@ export default function Login() {
       setEmail('')
       setPassword('')
       setTouched({ email: false, password: false })
+      navigate('/dashboard', { replace: true })
     }
   }
 
@@ -74,6 +77,11 @@ export default function Login() {
         >
           {isSubmitting ? 'Giriş Yapılıyor…' : 'Giriş Yap'}
         </button>
+
+        <div style={{ marginTop: 8 }}>
+          <span>Hesabın yok mu? </span>
+          <Link to="/register">Kayıt ol</Link>
+        </div>
       </form>
     </div>
   )
