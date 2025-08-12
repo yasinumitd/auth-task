@@ -1,4 +1,6 @@
 import { useState, type FormEvent } from 'react'
+import { createUserWithEmailAndPassword } from 'firebase/auth'
+import { auth } from '../firebase'
 
 function isValidEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -19,6 +21,8 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState('')
 
   const [touched, setTouched] = useState({ email: false, password: false, confirm: false })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [authError, setAuthError] = useState('')
 
   const emailError =
     (touched.email || email.trim() !== '') && !isValidEmail(email) ? 'Geçerli bir e-posta girin.' : ''
@@ -34,9 +38,24 @@ export default function Register() {
   const canSubmit =
     isValidEmail(email) && isValidPassword(password) && confirmPassword === password
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (!canSubmit) return
+    if (!canSubmit || isSubmitting) return
+
+    setAuthError('')
+    setIsSubmitting(true)
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+      setEmail('')
+      setPassword('')
+      setConfirmPassword('')
+      setTouched({ email: false, password: false, confirm: false })
+    } catch (error: unknown) {
+      const message = (error as { message?: string }).message ?? 'Kayıt başarısız oldu.'
+      setAuthError(message)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -85,12 +104,16 @@ export default function Register() {
           {confirmError && <span style={{ color: '#b91c1c', fontSize: 13 }}>{confirmError}</span>}
         </label>
 
+        {authError && (
+          <div role="alert" style={{ color: '#b91c1c', fontSize: 13 }}>{authError}</div>
+        )}
+
         <button
           type="submit"
-          disabled={!canSubmit}
-          style={{ padding: '10px 14px', borderRadius: 8, background: canSubmit ? '#111827' : '#9ca3af', color: 'white', border: 'none' }}
+          disabled={!canSubmit || isSubmitting}
+          style={{ padding: '10px 14px', borderRadius: 8, background: !canSubmit || isSubmitting ? '#9ca3af' : '#111827', color: 'white', border: 'none' }}
         >
-          Kayıt Ol
+          {isSubmitting ? 'Kayıt Oluyor…' : 'Kayıt Ol'}
         </button>
       </form>
     </div>
