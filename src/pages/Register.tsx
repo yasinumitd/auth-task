@@ -1,12 +1,42 @@
 import { useState, type FormEvent } from 'react'
 
+function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return emailRegex.test(email)
+}
+
+function isValidPassword(password: string): boolean {
+  const hasMinLength = password.length >= 8
+  const hasLower = /[a-z]/.test(password)
+  const hasUpper = /[A-Z]/.test(password)
+  const hasDigit = /\d/.test(password)
+  return hasMinLength && hasLower && hasUpper && hasDigit
+}
+
 export default function Register() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
 
+  const [touched, setTouched] = useState({ email: false, password: false, confirm: false })
+
+  const emailError =
+    (touched.email || email.trim() !== '') && !isValidEmail(email) ? 'Geçerli bir e-posta girin.' : ''
+
+  const passwordError =
+    (touched.password || password !== '') && !isValidPassword(password)
+      ? 'Şifre en az 8 karakter olmalı ve rakam, büyük ve küçük harf içermelidir.'
+      : ''
+
+  const confirmError =
+    (touched.confirm || confirmPassword !== '') && confirmPassword !== password ? 'Şifreler eşleşmiyor.' : ''
+
+  const canSubmit =
+    isValidEmail(email) && isValidPassword(password) && confirmPassword === password
+
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    if (!canSubmit) return
   }
 
   return (
@@ -19,9 +49,12 @@ export default function Register() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            onBlur={() => setTouched((t) => ({ ...t, email: true }))}
             placeholder="ornek@mail.com"
+            aria-invalid={!!emailError}
             style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #d1d5db' }}
           />
+          {emailError && <span style={{ color: '#b91c1c', fontSize: 13 }}>{emailError}</span>}
         </label>
 
         <label style={{ display: 'grid', gap: 6 }}>
@@ -30,9 +63,12 @@ export default function Register() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="En az 6 karakter"
+            onBlur={() => setTouched((t) => ({ ...t, password: true }))}
+            placeholder="En az 8 karakter, rakam, büyük ve küçük harf"
+            aria-invalid={!!passwordError}
             style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #d1d5db' }}
           />
+          {passwordError && <span style={{ color: '#b91c1c', fontSize: 13 }}>{passwordError}</span>}
         </label>
 
         <label style={{ display: 'grid', gap: 6 }}>
@@ -41,14 +77,18 @@ export default function Register() {
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
+            onBlur={() => setTouched((t) => ({ ...t, confirm: true }))}
             placeholder="Şifrenizi tekrar girin"
+            aria-invalid={!!confirmError}
             style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #d1d5db' }}
           />
+          {confirmError && <span style={{ color: '#b91c1c', fontSize: 13 }}>{confirmError}</span>}
         </label>
 
         <button
           type="submit"
-          style={{ padding: '10px 14px', borderRadius: 8, background: '#111827', color: 'white', border: 'none' }}
+          disabled={!canSubmit}
+          style={{ padding: '10px 14px', borderRadius: 8, background: canSubmit ? '#111827' : '#9ca3af', color: 'white', border: 'none' }}
         >
           Kayıt Ol
         </button>
