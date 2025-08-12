@@ -1,6 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { createUserWithEmailAndPassword } from 'firebase/auth'
-import { auth } from '../firebase'
+import { useAuth } from '../hooks/useAuth'
 
 function isValidEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -20,9 +19,9 @@ export default function Register() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
 
+  const { register, isSubmitting, error: authError, clearError } = useAuth()
+
   const [touched, setTouched] = useState({ email: false, password: false, confirm: false })
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [authError, setAuthError] = useState('')
 
   const emailError =
     (touched.email || email.trim() !== '') && !isValidEmail(email) ? 'Geçerli bir e-posta girin.' : ''
@@ -42,19 +41,12 @@ export default function Register() {
     event.preventDefault()
     if (!canSubmit || isSubmitting) return
 
-    setAuthError('')
-    setIsSubmitting(true)
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+    const userCredential = await register(email, password)
+    if (userCredential) {
       setEmail('')
       setPassword('')
       setConfirmPassword('')
       setTouched({ email: false, password: false, confirm: false })
-    } catch (error: unknown) {
-      const message = (error as { message?: string }).message ?? 'Kayıt başarısız oldu.'
-      setAuthError(message)
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
@@ -67,7 +59,7 @@ export default function Register() {
           <input
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => { setEmail(e.target.value); if (authError) clearError() }}
             onBlur={() => setTouched((t) => ({ ...t, email: true }))}
             placeholder="ornek@mail.com"
             aria-invalid={!!emailError}
@@ -81,7 +73,7 @@ export default function Register() {
           <input
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => { setPassword(e.target.value); if (authError) clearError() }}
             onBlur={() => setTouched((t) => ({ ...t, password: true }))}
             placeholder="En az 8 karakter, rakam, büyük ve küçük harf"
             aria-invalid={!!passwordError}
@@ -95,7 +87,7 @@ export default function Register() {
           <input
             type="password"
             value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
+            onChange={(e) => { setConfirmPassword(e.target.value); if (authError) clearError() }}
             onBlur={() => setTouched((t) => ({ ...t, confirm: true }))}
             placeholder="Şifrenizi tekrar girin"
             aria-invalid={!!confirmError}

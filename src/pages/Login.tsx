@@ -1,7 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { signInWithEmailAndPassword } from 'firebase/auth'
-import { FirebaseError } from 'firebase/app'
-import { auth } from '../firebase'
+import { useAuth } from '../hooks/useAuth'
 
 function isValidEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -12,49 +10,24 @@ export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
+  const { login, isSubmitting, error: authError, clearError } = useAuth()
+
   const [touched, setTouched] = useState({ email: false, password: false })
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [authError, setAuthError] = useState('')
 
   const emailError = (touched.email || email.trim() !== '') && !isValidEmail(email) ? 'Geçerli bir e-posta girin.' : ''
   const passwordError = (touched.password || password !== '') && password.trim() === '' ? 'Şifre gerekli.' : ''
 
   const canSubmit = isValidEmail(email) && password.trim() !== ''
 
-  const mapAuthError = (error: unknown): string => {
-    const code = (error as FirebaseError)?.code
-    switch (code) {
-      case 'auth/invalid-credential':
-      case 'auth/wrong-password':
-        return 'E-posta veya şifre hatalı.'
-      case 'auth/user-not-found':
-        return 'Bu e-posta ile kayıtlı kullanıcı bulunamadı.'
-      case 'auth/invalid-email':
-        return 'Geçerli bir e-posta girin.'
-      case 'auth/too-many-requests':
-        return 'Çok fazla başarısız deneme yapıldı. Lütfen daha sonra tekrar deneyin.'
-      case 'auth/user-disabled':
-        return 'Bu kullanıcı hesabı devre dışı bırakılmış.'
-      default:
-        return (error as { message?: string }).message ?? 'Giriş başarısız oldu.'
-    }
-  }
-
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!canSubmit || isSubmitting) return
 
-    setAuthError('')
-    setIsSubmitting(true)
-    try {
-      await signInWithEmailAndPassword(auth, email, password)
+    const userCredential = await login(email, password)
+    if (userCredential) {
       setEmail('')
       setPassword('')
       setTouched({ email: false, password: false })
-    } catch (error: unknown) {
-      setAuthError(mapAuthError(error))
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
@@ -67,7 +40,7 @@ export default function Login() {
           <input
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => { setEmail(e.target.value); if (authError) clearError() }}
             onBlur={() => setTouched((t) => ({ ...t, email: true }))}
             placeholder="ornek@mail.com"
             aria-invalid={!!emailError}
@@ -81,7 +54,7 @@ export default function Login() {
           <input
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => { setPassword(e.target.value); if (authError) clearError() }}
             onBlur={() => setTouched((t) => ({ ...t, password: true }))}
             placeholder="Şifrenizi girin"
             aria-invalid={!!passwordError}
