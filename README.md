@@ -1,69 +1,45 @@
-# React + TypeScript + Vite
+# Auth Task (React + Vite + Firebase)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Basit bir e‑posta/şifre ile kayıt ve giriş akışı. Firebase Authentication kullanır, `/dashboard` korumalı sayfası vardır. Router ile `/register`, `/login`, `/dashboard` rotaları bulunur.
 
-Currently, two official plugins are available:
+## Gereksinimler
+- Node.js 18+ (önerilen 20+)
+- npm 9+
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Çalıştırma adımı
+1. Bağımlılıklar
+```
+npm install
+```
+2. Geliştirme sunucusu
+```
+npm run dev
+```
+3. Tarayıcıdan açın: `http://localhost:5173`
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Test komutları
+- Component testleri (Vitest + RTL)
+```
+npm run test
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Kısa mimari notları
+- Router ve sayfalar
+  - `src/App.tsx` temel rotaları tanımlar: `/register`, `/login`, `/dashboard`.
+  - `src/providers/AuthGate.tsx` global bir sargı olarak çalışır; public rotalar (`/login`, `/register`) dışındaki tüm rotalarda kullanıcı yoksa `/login`’a yönlendirir, kullanıcı varken public rotalarda `/dashboard`’a iter.
+- Firebase
+  - `src/firebase.ts` Firebase App’i başlatır ve `auth` nesnesini dışa aktarır. Oturum kalıcılığı `browserSessionPersistence` (tarayıcı oturumu kapanınca biter) olarak ayarlanmıştır.
+- İş mantığı (hook)
+  - `src/hooks/useAuth.ts` sadece ağ işlemlerini kapsar: `register(email, password)` ve `login(email, password)`. Ayrıca `isSubmitting`, `error`, `clearError` durumları sağlar. Validasyonlar sayfa bileşenlerinde tutulur.
+- Sayfalar
+  - `src/pages/Register.tsx`: e‑posta formatı, şifre karmaşıklığı (8+ karakter, rakam, büyük/küçük harf) ve şifre eşleşmesi. Eksik şifre kurallarını dinamik listeler.
+  - `src/pages/Login.tsx`: e‑posta formatı ve zorunlu şifre kontrolü, başarılı girişte `/dashboard`’a yönlendirme.
+  - `src/pages/Protected.tsx`: oturumdaki kullanıcının e‑postasını gösterir ve çıkış yapma butonu içerir.
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+İsteğe bağlı geliştirmeler
+- `AuthGate` public rota listesini konfigüre edilebilir hale getirmek
+- Başarılı giriş/kayıt sonrası toast bildirimleri
+
+## TODO
+- Backend kısmı eksik kendimi geliştirmem gereken alan. bu yüzden sayfaların yine dinamik çalışabilmesi için firebase kurdum.

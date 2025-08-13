@@ -15,6 +15,15 @@ function isValidPassword(password: string): boolean {
   return hasMinLength && hasLower && hasUpper && hasDigit
 }
 
+function getPasswordIssues(password: string): string[] {
+  const issues: string[] = []
+  if (password.length < 8) issues.push('en az 8 karakter')
+  if (!/[0-9]/.test(password)) issues.push('rakam')
+  if (!/[A-Z]/.test(password)) issues.push('büyük harf')
+  if (!/[a-z]/.test(password)) issues.push('küçük harf')
+  return issues
+}
+
 export default function Register() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -27,9 +36,10 @@ export default function Register() {
   const emailError =
     (touched.email || email.trim() !== '') && !isValidEmail(email) ? 'Geçerli bir e-posta girin.' : ''
 
+  const passwordIssues = getPasswordIssues(password)
   const passwordError =
-    (touched.password || password !== '') && !isValidPassword(password)
-      ? 'Şifre en az 8 karakter olmalı ve rakam, büyük ve küçük harf içermelidir.'
+    (touched.password || password !== '') && passwordIssues.length > 0
+      ? `Eksik: ${passwordIssues.join(', ')}`
       : ''
 
   const confirmError =
@@ -80,7 +90,9 @@ export default function Register() {
             aria-invalid={!!passwordError}
             style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #d1d5db' }}
           />
-          {passwordError && <span style={{ color: '#b91c1c', fontSize: 13 }}>{passwordError}</span>}
+          {passwordError && (
+            <span style={{ color: '#b91c1c', fontSize: 13, display: 'block', maxWidth: '100%', overflowWrap: 'break-word', wordBreak: 'break-word' }}>{passwordError}</span>
+          )}
         </label>
 
         <label style={{ display: 'grid', gap: 6 }}>
