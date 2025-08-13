@@ -12,19 +12,21 @@ export default function Protected() {
 
   if (user === null) {
     return (
-      <div style={{ maxWidth: 540, margin: '40px auto', padding: 24 }}>
+      <div className="protected-container">
         <p>Yükleniyor…</p>
       </div>
     )
   }
 
   return (
-    <div style={{ maxWidth: 540, margin: '40px auto', padding: 24 }}>
-      <h1>Korumalı Sayfa</h1>
-      <p>Giriş yapan: <strong>{user.email}</strong></p>
+    <div className="protected-container">
+      <h1 className="protected-title">Korumalı Sayfa</h1>
+      <div className="protected-content">
+        <p>Giriş yapan: <span className="protected-user">{user.email}</span></p>
+      </div>
       <button
         onClick={() => signOut(auth)}
-        style={{ marginTop: 16, padding: '10px 14px', borderRadius: 8, background: '#111827', color: 'white', border: 'none' }}
+        className="logout-button"
       >
         Çıkış Yap
       </button>
